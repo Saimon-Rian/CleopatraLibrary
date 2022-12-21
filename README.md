@@ -14,7 +14,8 @@ Project objectives:
 - Database with Prisma;
 - Front-end with Angular;
 - WebScraping;
-- Files Uploads.
+- Files Uploads;
+- Unitary and integration tests;
 
 Entities present in the API:
 -
