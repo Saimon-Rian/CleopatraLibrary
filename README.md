@@ -11,7 +11,7 @@ Project objectives:
 
 - Typescript as main language;
 - Create an API with Moleculer Framework;
-- Database with Prisma;
+- Database with TypeORM;
 - Front-end with Angular;
 - WebScraping;
 - Files Uploads;
