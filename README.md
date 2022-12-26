@@ -27,3 +27,14 @@ Entities present in the API:
 - Ratings;
 - Favorites.
 
+How to run this project?
+-
+
+Install packages:
+
+npm install
+
+Running the project:
+
+docker-compose up
+npm run dev
