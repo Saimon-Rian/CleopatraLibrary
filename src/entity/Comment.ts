@@ -1,4 +1,6 @@
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Book } from "./Book";
+import { User } from "./User";
 
 @Entity('comments')
 export class Comment {
@@ -11,9 +13,11 @@ export class Comment {
     @Column({type: "text"})
     body: string
 
-    @Column({type: "integer"})
-    user: number
+    @ManyToOne(() => User, (user) => user.comment)
+    @JoinColumn({name: "user_id"})
+    user: User
 
-    @Column({type: "integer"})
-    book: number
+    @ManyToOne(() => Book, (book) => book.comments)
+    @JoinColumn({name: "book_id"})
+    book: Book
 }

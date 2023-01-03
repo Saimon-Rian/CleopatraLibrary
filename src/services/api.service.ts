@@ -1,6 +1,7 @@
 import type { Context, ServiceSchema } from "moleculer";
 import type { ApiSettingsSchema, GatewayResponse, IncomingRequest, Route } from "moleculer-web";
 import ApiGateway from "moleculer-web";
+import jwt from "jsonwebtoken";
 
 interface Meta {
 	userAgent?: string | null | undefined;
@@ -24,6 +25,20 @@ const ApiService: ServiceSchema<ApiSettingsSchema> = {
 
 		routes: [
 			{
+				path: "/",
+				aliases: {
+					"POST user/new": "UserService.newUser",
+					"POST login": "UserService.userLogin",
+				},
+				// Enable authentication. Implement the logic into `authenticate` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authentication
+				authentication: false,
+
+				// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
+				authorization: false,
+				
+				
+			},
+			{
 				path: "/api",
 
 				// Route-level Express middlewares. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Middlewares
@@ -33,18 +48,18 @@ const ApiService: ServiceSchema<ApiSettingsSchema> = {
 				mergeParams: true,
 
 				// Enable authentication. Implement the logic into `authenticate` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authentication
-				authentication: false,
+				authentication: true,
 
 				// Enable authorization. Implement the logic into `authorize` method. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Authorization
-				authorization: false,
+				authorization: true,
 
 				// The auto-alias feature allows you to declare your route alias directly in your services.
 				// The gateway will dynamically build the full routes from service schema.
 				autoAliases: true,
 
 				aliases: {
-					"POST /user/new": "UserService.newUser",
 					"GET /user": "UserService.allUser",
+					"GET /user/profile": "UserService.getProfile",
 					"GET /user/:user_id": "UserService.getUser",
 					"PUT /user/:user_id": "UserService.updateUser",
 					"DELETE /user/:user_id": "UserService.deleteUser",
@@ -149,33 +164,41 @@ const ApiService: ServiceSchema<ApiSettingsSchema> = {
 		 * PLEASE NOTE, IT'S JUST AN EXAMPLE IMPLEMENTATION. DO NOT USE IN PRODUCTION!
 		 */
 		authenticate(
-			ctx: Context,
-			route: Route,
-			req: IncomingRequest,
-		): Record<string, unknown> | null {
-			// Read the token from header
-			const auth = req.headers.authorization;
+            ctx: Context,
+            route: Route,
+            req: IncomingRequest,
+        ){
+            // Read the token from header
+            const auth = req.headers.authorization;
 
-			if (auth && auth.startsWith("Bearer")) {
-				const token = auth.slice(7);
+            if (!auth){
+                throw new ApiGateway.Errors.UnAuthorizedError(
+                        ApiGateway.Errors.ERR_NO_TOKEN,
+                        null,
+                    );
+            }
 
-				// Check the token. Tip: call a service which verify the token. E.g. `accounts.resolveToken`
-				if (token === "123456") {
-					// Returns the resolved user. It will be set to the `ctx.meta.user`
-					return { id: 1, name: "John Doe" };
-				}
-				// Invalid token
-				throw new ApiGateway.Errors.UnAuthorizedError(
-					ApiGateway.Errors.ERR_INVALID_TOKEN,
-					null,
-				);
-			} else {
-				// No token. Throw an error or do nothing if anonymous access is allowed.
-				// throw new E.UnAuthorizedError(E.ERR_NO_TOKEN);
-				return null;
-			}
-		},
+            const token = auth.replace('Bearer', '').trim()
 
+            try {
+                var decoded_user = jwt.verify(token, 'secret');
+                if (decoded_user){
+                    return decoded_user
+                }
+            } catch(err) {
+                // Invalid token
+                throw new ApiGateway.Errors.UnAuthorizedError(
+                    ApiGateway.Errors.ERR_INVALID_TOKEN,
+                    null,
+                );
+            }
+
+            throw new ApiGateway.Errors.UnAuthorizedError(
+                ApiGateway.Errors.ERR_NO_TOKEN,
+                null,
+            );
+
+        },
 		/**
 		 * Authorize the request. Check that the authenticated user has right to access the resource.
 		 *

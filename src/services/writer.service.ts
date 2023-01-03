@@ -13,7 +13,6 @@ const WriterService = {
             params: {
                 name: {type: "string"},
                 user: {type: "number"},
-                book: {type: "number"}
             },
             async handler(ctx: any): Promise<any> {
                 const writerRepository = AppDataSource.getRepository(Writer)
@@ -22,7 +21,6 @@ const WriterService = {
                     const newWriter = writerRepository.save({
                         "name": ctx.params.name,
                         "user": ctx.params.user,
-                        "book": ctx.params.book
                     })
                     
                     ctx.meta.$statusCode = 200

@@ -13,7 +13,7 @@ const BookService = {
             params: {
                 user: {type: "number"},
                 comments: {type: "number"},
-                writer:{type: "string", min: 12},
+                writer:{type: "number"},
                 category:{type: "string", max: 150} ,
                 title: {type: "string", max: 50},
                 summary: {type: "string", max: 250},
@@ -46,6 +46,8 @@ const BookService = {
         },
 
         allBook: {
+            auth: "required",
+            
             async handler(){
                 const bookRepository = AppDataSource.getRepository(Book)
 

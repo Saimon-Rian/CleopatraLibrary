@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Book } from "./Book";
+import { User } from "./User";
 
 @Entity('ratings')
 export class Rating {
@@ -8,9 +10,11 @@ export class Rating {
     @Column({type: "integer"})
     rating: number
 
-    @Column({type: "integer"})
-    user: number
+    @ManyToOne(() => User, (user) => user.rating)
+    @JoinColumn({name: "user_id"})
+    user: User
 
-    @Column({type: "integer"})
-    book: number
+    @ManyToOne(() => Rating, (rating) => rating.book)
+    @JoinColumn({name: "book_id"})
+    book: Book
 }

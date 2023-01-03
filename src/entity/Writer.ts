@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Book } from "./Book";
+import { User } from "./User";
 
 @Entity('writers')
 export class Writer {
@@ -8,9 +10,11 @@ export class Writer {
     @Column({type: "text"})
     name: string
 
-    @Column({type: "integer"})
-    user: number
+    @ManyToOne(() => User, (user) => user.writer)
+    @JoinColumn({name: "user_id"})
+    user: User
 
-    @Column({type: "integer"})
-    book: number
+    @OneToMany(() => Book, (book) => book.writer)
+    @JoinColumn({name: "book_id"})
+    book: Book
 }
