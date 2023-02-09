@@ -1,4 +1,5 @@
 "use strict"
+import { Context } from "moleculer";
 import { AppDataSource } from "../data-source"
 import { Comment } from "../entity/Comment"
 const { ServiceNotFoundError } = require("moleculer").Errors;
@@ -39,12 +40,18 @@ const CommentService = {
         },
 
         allComment: {
-            async handler(){
+            async handler(ctx: any){
                 const commentRepository = AppDataSource.getRepository(Comment)
 
-                const comments = commentRepository.find({})
+                try {
+                    const comments = commentRepository.find({})
 
-                return comments
+                    return comments
+    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 204
+                }
             }
         },
 
@@ -53,9 +60,15 @@ const CommentService = {
                 const { comment_id } = ctx.params
                 const commentRepository = AppDataSource.getRepository(Comment)
 
-                const comment = commentRepository.findBy({id: Number(comment_id)})
+                try {
+                    const comment = commentRepository.findBy({id: Number(comment_id)})
 
-                return comment
+                    return comment
+    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 404
+                }
             }
         },
 
@@ -70,18 +83,23 @@ const CommentService = {
                 const { comment_id } = ctx.params
                 const commentRepository = AppDataSource.getRepository(Comment)
                 const comment = await commentRepository.findOneBy({id: comment_id})
-             
-                if(comment != null){
-                    comment.user = ctx.params.user
-                    comment.book = ctx.params.book
-                    comment.body = ctx.params.body
-                    comment.about = ctx.params.about
-
-                    commentRepository.save(comment)
-
-                    return comment
-                } else {
-                    throw new ServiceNotFoundError()
+                
+                try {
+                    if(comment != null){
+                        comment.user = ctx.params.user
+                        comment.book = ctx.params.book
+                        comment.body = ctx.params.body
+                        comment.about = ctx.params.about
+    
+                        commentRepository.save(comment)
+    
+                        return comment
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 304
                 }
             }
         },
@@ -92,12 +110,16 @@ const CommentService = {
                 const commentRepository = AppDataSource.getRepository(Comment)
 
                 const comment = await commentRepository.findOneBy({id: comment_id})
-                
-                if(comment != null){
-                    const user = commentRepository.delete({id: Number(comment_id)})
-                    ctx.meta.$statusCode = 202
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(comment != null){
+                        const user = commentRepository.delete({id: Number(comment_id)})
+                        ctx.meta.$statusCode = 202
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 400
                 }
             }
         }

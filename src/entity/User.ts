@@ -1,9 +1,8 @@
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Book } from "./Book";
 import { Comment } from "./Comment";
-import { Favorite } from "./Favorites";
+import { Favorite } from "./Favorite";
 import { Rating } from "./Rating";
-import { Writer } from "./Writer";
 
 @Entity('users')
 export class User {
@@ -22,15 +21,11 @@ export class User {
     @Column({type: 'text'})
     password: string
 
-    @Column({type: 'integer'})
+    @Column({type: 'integer', nullable: true})
     age: number
 
     @Column({type: 'text', nullable: true, width: 300})
     about: string
-
-    @OneToMany(() => Writer, (writer) => writer.user)
-    @JoinColumn({name: "writer_id"})
-    writer: Writer[]
 
     @OneToMany(() => Comment, (comment) => comment.user)
     @JoinColumn({name: "comment_id"})

@@ -1,17 +1,15 @@
 import { Column, Entity, JoinColumn, JoinTable, OneToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Comment } from "./Comment";
-import { Favorite } from "./Favorites";
+import { Favorite } from "./Favorite";
 import { User } from "./User";
-import { Writer } from "./Writer";
 
 @Entity('books')
 export class Book {
     @PrimaryGeneratedColumn()
     id: number
 
-    @ManyToOne(() => Writer, (writer) => writer.book)
-    @JoinColumn({name: "writer_id"})
-    writer: Writer
+    @Column({type: 'text'})
+    writer: string
 
     @Column({type: 'text'})
     category: string 
@@ -37,4 +35,7 @@ export class Book {
 
     @OneToMany(() => Favorite, (favorite) => favorite.book)
     favorites: Favorite[]
+
+    @Column({type: 'text', nullable: true})
+    src: string
 }

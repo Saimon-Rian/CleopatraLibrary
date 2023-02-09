@@ -4,8 +4,6 @@ import { User } from "../entity/User";
 const { ServiceNotFoundError } = require("moleculer").Errors;
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
-import { headers } from "nats";
-import { Request } from "nats/lib/nats-base-client/request";
 
 const UserService = {
     name: "UserService",
@@ -20,8 +18,6 @@ const UserService = {
                 email: {type: "email"},
                 username: "string",
                 password: "string",
-                age: "number",
-                about: {type: "string", nullable: true}
             },
             async handler(ctx: any): Promise<any> {
                 const UserRepository = AppDataSource.getRepository(User)
@@ -33,8 +29,6 @@ const UserService = {
                         "email": ctx.params.email,
                         "password": password,
                         "username": ctx.params.username,
-                        "age": ctx.params.age,
-                        "about": ctx.params.about
                     })
                     
                     await UserRepository.save(newUser)
@@ -42,7 +36,7 @@ const UserService = {
                     return newUser
                 } catch (error) {
                     console.log(error)
-                ctx.meta.$statusCode = 404
+                    ctx.meta.$statusCode = 404
                 }
             }
         },
@@ -51,10 +45,14 @@ const UserService = {
             async handler(ctx: any): Promise<any>{
                 const UserRepository = AppDataSource.getRepository(User)
 
-                // add possibilidade de filtro, /user/?name=Saimon
-                const users = UserRepository.find({})
+                try {
+                    const users = UserRepository.find({})
 
-                return users
+                    return users     
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 204
+                }
             }
         },
 
@@ -63,9 +61,14 @@ const UserService = {
                 const { user_id } = ctx.params
                 const UserRepository = AppDataSource.getRepository(User)
 
-                const user = UserRepository.findBy({id: Number(user_id)})
+                try {
+                    const user = UserRepository.findBy({id: Number(user_id)})
 
-                return user
+                    return user    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 404
+                }
            }
         },
 
@@ -74,8 +77,6 @@ const UserService = {
                 name: "string",
                 email:{type: "email",},
                 username: "string",
-                age: "number",
-                about: "string"
             },
             async handler(ctx: any): Promise<any>{
                 const { user_id } = ctx.params
@@ -85,18 +86,21 @@ const UserService = {
                     id: user_id,
                 })
                 
-                if(user != null){
-                    user.name = ctx.params.name
-                    user.email = ctx.params.email
-                    user.username = ctx.params.username
-                    user.age = ctx.params.age
-                    user.about = ctx.params.about
-
-                    userRepository.save(user)
-                
-                    return user    
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(user != null){
+                        user.name = ctx.params.name
+                        user.email = ctx.params.email
+                        user.username = ctx.params.username
+    
+                        userRepository.save(user)
+                    
+                        return user    
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 304
                 }
             }
         },
@@ -110,11 +114,16 @@ const UserService = {
                     id: user_id,
                 })
                 
-                if(user != null){
-                    const user = userRepository.delete({id: Number(user_id)})
-                    ctx.meta.$statusCode = 202
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(user != null){
+                        const user = userRepository.delete({id: Number(user_id)})
+                        ctx.meta.$statusCode = 202
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 400 
                 }
             }
         },
@@ -122,13 +131,12 @@ const UserService = {
         userLogin: {
             params: {
                 username: "string",
-                email: {type: "email"},
                 password: "string"
             },
             async handler(ctx: any): Promise<any>{
-                const {username, email, password} = ctx.params
+                const {username, password} = ctx.params
                 const userRepository = AppDataSource.getRepository(User)
-                const user: any = await userRepository.findOneBy({ email })
+                const user: any = await userRepository.findOneBy({ username })
 
                 if (!user){
                     ctx.meta.$statusCode = 400

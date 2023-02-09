@@ -40,9 +40,14 @@ const RatingService = {
             async handler(ctx: any): Promise<any>{
                 const ratingRepository = AppDataSource.getRepository(Rating)
 
-                const ratings = ratingRepository.find({})
+                try {
+                    const ratings = ratingRepository.find({})
 
-                return ratings
+                    return ratings     
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 204
+                }
             }
         },
 
@@ -51,9 +56,14 @@ const RatingService = {
                 const ratingRepository = AppDataSource.getRepository(Rating)
                 const { rating_id } = ctx.params
 
-                const rating = await ratingRepository.findBy({id: rating_id})
+                try {
+                    const rating = await ratingRepository.findBy({id: rating_id})
                 
-                return rating
+                    return rating     
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 404
+                }
             }
         },
 
@@ -67,17 +77,22 @@ const RatingService = {
                 const { rating_id } = ctx.params
                 const ratingRepository = AppDataSource.getRepository(Rating)
                 const rating = await ratingRepository.findOneBy({id: rating_id})
-             
-                if(rating != null){
-                    rating.user = ctx.params.user
-                    rating.book = ctx.params.book
-                    rating.rating = ctx.params.rating
-
-                    ratingRepository.save(rating)
-
-                    return rating
-                } else {
-                    throw new ServiceNotFoundError()
+                
+                try {
+                    if(rating != null){
+                        rating.user = ctx.params.user
+                        rating.book = ctx.params.book
+                        rating.rating = ctx.params.rating
+    
+                        ratingRepository.save(rating)
+    
+                        return rating
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch(error){
+                    console.log(error)
+                    ctx.meta.$statusCode = 304
                 }
             }
         },
@@ -87,12 +102,16 @@ const RatingService = {
                 const ratingRepository = AppDataSource.getRepository(Rating)
 
                 const rating = await ratingRepository.findOneBy({id: rating_id})
-                
-                if(rating != null){
-                    const user = ratingRepository.delete({id: Number(rating_id)})
-                    ctx.meta.$statusCode = 202
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(rating != null){
+                        const user = ratingRepository.delete({id: Number(rating_id)})
+                        ctx.meta.$statusCode = 202
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 400
                 }
             }
         },

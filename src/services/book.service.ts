@@ -13,12 +13,13 @@ const BookService = {
             params: {
                 user: {type: "number"},
                 comments: {type: "number"},
-                writer:{type: "number"},
-                category:{type: "string", max: 150} ,
-                title: {type: "string", max: 50},
-                summary: {type: "string", max: 250},
-                first_paragraph: {type: "string", min: 100, max: 300},    
+                writer:{type: "string"},
+                category:{type: "string"} ,
+                title: {type: "string"},
+                summary: {type: "string"},
+                first_paragraph: {type: "string"},    
                 body: {type: "string"},
+                src: {type: "string"}
             },
             async handler(ctx: any): Promise<any>{
                 const bookRepository = AppDataSource.getRepository(Book)                
@@ -32,6 +33,7 @@ const BookService = {
                         "summary": ctx.params.summary,
                         "first_paragraph": ctx.params.first_paragraph,
                         "body": ctx.params.body,
+                        "src": ctx.params.src
                     })
     
                     await bookRepository.save(newBook)
@@ -48,12 +50,17 @@ const BookService = {
         allBook: {
             auth: "required",
             
-            async handler(){
+            async handler(ctx: any){
                 const bookRepository = AppDataSource.getRepository(Book)
 
-                const books = bookRepository.find({})
+                try {
+                    const books = bookRepository.find({})
 
-                return books
+                    return books
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 204
+                }
             }
         },
 
@@ -62,41 +69,52 @@ const BookService = {
                 const { book_id } = ctx.params
                 const bookRepository = AppDataSource.getRepository(Book)
 
-                const book = bookRepository.findBy({id: Number(book_id)})
+                try {
+                    const book = bookRepository.findBy({id: Number(book_id)})
 
-                return book
+                    return book    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 204
+                }
             }
         },
 
         updateBook:{
             params: {
-                user: {type: "number"},
-                writer:{type: "string", min: 12},
-                category:{type: "string", max: 150} ,
+                writer:{type: "string"},
+                category:{type: "string"} ,
                 title: {type: "string", max: 50},
-                summary: {type: "string", max: 250},
-                first_paragraph: {type: "string", min: 100, max: 300},    
+                summary: {type: "string"},
+                first_paragraph: {type: "string"},    
                 body: {type: "string"},
+                src: {type: "string"},
             },
             async handler(ctx: any): Promise<any>{
                 const { book_id } = ctx.params
                 const bookRepository = AppDataSource.getRepository(Book)
                 const book = await bookRepository.findOneBy({id: book_id})
                 
-                if(book != null){
-                    book.user = ctx.params.user,
-                    book.writer = ctx.params.writer,
-                    book.category = ctx.params.category,
-                    book.title = ctx.params.title,
-                    book.summary = ctx.params.summary,
-                    book.first_paragraph = ctx.params.first_paragraph,
-                    book.body = ctx.params.body
-
-                    bookRepository.save(book)
-
-                    return book
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(book != null){
+                        book.user = ctx.params.user,
+                        book.writer = ctx.params.writer,
+                        book.category = ctx.params.category,
+                        book.title = ctx.params.title,
+                        book.summary = ctx.params.summary,
+                        book.first_paragraph = ctx.params.first_paragraph,
+                        book.body = ctx.params.body,
+                        book.src = ctx.params.src
+    
+                        bookRepository.save(book)
+    
+                        return book
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }    
+                } catch (error) {
+                    console.log(error)
+                    ctx.meta.$statusCode = 304
                 }
             }
         },
@@ -107,12 +125,17 @@ const BookService = {
                 const bookRepository = AppDataSource.getRepository(Book)
 
                 const book = await bookRepository.findOneBy({id: book_id})
-                
-                if(book != null){
-                    const user = bookRepository.delete({id: Number(book_id)})
-                    ctx.meta.$statusCode = 202
-                } else {
-                    throw new ServiceNotFoundError()
+                try {
+                    if(book != null){
+                        const user = bookRepository.delete({id: Number(book_id)})
+                        ctx.meta.$statusCode = 202
+                    } else {
+                        throw new ServiceNotFoundError()
+                    }
+     
+                } catch (error) {
+                   console.log(error)
+                   ctx.meta.$statusCode = 400
                 }
             }
         }
